@@ -1,18 +1,18 @@
 #ifndef CONATCT_HPP
-# define CONATCT_HPP
+#define CONATCT_HPP
 
-# include <string>
+#include <string>
 
 class Contact
 {
   public:
-	Contact(void);
+	Contact();
 	void setContact(const std::string &firstName, const std::string &lastName,
-		const std::string &nickname, const std::string &phoneNumber,
-		const std::string &darkestSecret);
-	const std::string getFirstName(void) const;
-	const std::string getLastname(void) const;
-	const std::string getnickname(void) const;
+					const std::string &nickname, const std::string &phoneNumber,
+					const std::string &darkestSecret);
+	const std::string getFirstName() const;
+	const std::string getLastName() const;
+	const std::string getnickname() const;
 	void displayDetail() const;
 
   private:
