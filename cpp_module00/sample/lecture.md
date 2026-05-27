@@ -175,6 +175,60 @@ B::print();
 
 と書きます。
 
+### 無名 namespace
+
+名前を付けない namespace もあります。
+
+```cpp
+namespace
+{
+    std::string formatColumn(const std::string &text)
+    {
+        if (text.length() <= 10)
+            return (text);
+        return (text.substr(0, 9) + ".");
+    }
+}
+```
+
+これは**その翻訳単位の中でだけ見える名前**を作るための書き方です。  
+`PhoneBook.cpp` の補助関数のように:
+
+- ヘッダに公開したくない
+- 他の `.cpp` から呼ばせたくない
+- クラスメンバにするほどではない
+
+という関数を閉じ込めるのに向いています。
+
+ここでいう「同じファイル」は厳密には少し違い、正確には**同じ翻訳単位**です。  
+つまり `.cpp` 本体だけでなく、そこに `#include` で展開された内容も含めて 1 単位として扱われます。
+
+### 無名 namespace と `static` 関数
+
+C 風に:
+
+```cpp
+static bool parseIndex(const std::string &input, int *index);
+```
+
+のように、ファイルスコープの関数へ `static` を付けて「この `.cpp` 限定」にする書き方もあります。  
+C++ では無名 namespace でもほぼ同じ目的を達成できます。
+
+無名 namespace の利点は、関数だけでなく:
+
+- 定数
+- 構造体
+- クラス
+- 補助型
+
+もまとめてその翻訳単位限定にできることです。  
+そのため C++ では、`.cpp` 専用の実装詳細を隠す手段として無名 namespace がよく使われます。
+
+### ヘッダに無名 namespace を書くときの注意
+
+無名 namespace は「include した先ごとに別物」ができます。  
+そのため、基本的には `.hpp` ではなく `.cpp` に置く方が安全です。
+
 ### `std` とは何か
 
 `std` は C++ 標準ライブラリの名前空間です。  
@@ -542,6 +596,66 @@ private:
 
 これは全 `Account` オブジェクトで共有される 1 個の変数です。
 
+### `static` は「クラス共有」、`static const int` は「クラス内定数」
+
+`static` が付くと、そのメンバは各オブジェクトの中に 1 個ずつ入るのではなく、クラス全体で 1 個だけ共有されます。
+
+```cpp
+class PhoneBook
+{
+private:
+    static const int kMaxContacts = 8;
+};
+```
+
+この `kMaxContacts` は「各 `PhoneBook` オブジェクトの状態」ではなく、「`PhoneBook` という型のルール」を表す値です。  
+今回のように「最大 8 件」という上限は、個々のインスタンスごとに変わる性質の情報ではないので、`static const int` が自然です。
+
+### なぜ `static const int` が固定長配列に使えるのか
+
+C++98 では、固定長配列の長さには**コンパイル時に確定する整数定数**が必要です。
+
+```cpp
+class PhoneBook
+{
+private:
+    static const int kMaxContacts = 8;
+    Contact _contacts[kMaxContacts];
+};
+```
+
+コンパイラはクラス定義を読んだ時点で:
+
+- `kMaxContacts` は 8
+- `_contacts` は `Contact` を 8 個持つ
+- `sizeof(PhoneBook)` はこの大きさ
+
+と確定できます。  
+そのため、各インスタンスは生成時にメモリ確保されますが、**必要なサイズ自体はコンパイル時に決まっています**。
+
+### `const` だけでは足りない理由
+
+例えば次はダメです。
+
+```cpp
+class PhoneBook
+{
+private:
+    const int _maxContacts;
+    Contact _contacts[_maxContacts];
+};
+```
+
+`_maxContacts` は `const` ですが、非 `static` メンバなので「各オブジェクトの一部」です。  
+つまり値が意味を持つのはインスタンスごとであり、クラスのレイアウトを決める段階では使えません。
+
+重要なのは:
+
+- `const` は「変更できない」という意味
+- `static const int` は「クラス共通で、配列長に使える整数定数」を作りやすい書き方
+
+という違いです。
+
 ### 定義は `.cpp` に必要
 
 ヘッダで宣言しただけでは実体はありません。  
@@ -676,6 +790,9 @@ Contact _contacts[8];
 
 これは `Contact` オブジェクトを 8 個並べた配列です。  
 `PhoneBook` 課題では、最大件数が固定で動的確保禁止なので非常に相性がよいです。
+
+`Contact _contacts[kMaxContacts];` のように書く場合も、結局は「`PhoneBook` 型は `Contact` を 8 個ぶん内蔵する型」として扱われます。  
+したがって、`PhoneBook` オブジェクトを 1 個作るたびに `_contacts` の実体は一緒に確保されますが、その**配列長は実行時に変わりません**。
 
 ### 添字
 
