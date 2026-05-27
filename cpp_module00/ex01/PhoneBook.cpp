@@ -35,7 +35,6 @@ bool parseInput(const std::string &input, int &index)
 		return false;
 	return true;
 }
-
 } // namespace
 
 PhoneBook::PhoneBook() : _count(0), _nextIndex(0)
