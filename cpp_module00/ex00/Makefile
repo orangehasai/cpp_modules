@@ -13,10 +13,10 @@ $(NAME): $(OBJS)
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 
 clean:
-	rm -r $(OBJS)
+	rm -f $(OBJS)
 
 fclean: clean
-	rm -r $(NAME)
+	rm -f $(NAME)
 
 re: fclean all
 
