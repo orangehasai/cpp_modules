@@ -3,6 +3,23 @@
 #include <ctime>
 #include <iomanip>
 
+namespace
+{
+const int MaxTrackedAccounts = 1024;
+int g_accountAmounts[MaxTrackedAccounts];
+int g_liveAccounts = 0;
+int g_trackedAccounts = 0;
+
+void trackAccountAmount(int accountIndex, int amount)
+{
+	if (accountIndex < 0 || accountIndex >= MaxTrackedAccounts)
+		return;
+	g_accountAmounts[accountIndex] = amount;
+	if (accountIndex + 1 > g_trackedAccounts)
+		g_trackedAccounts = accountIndex + 1;
+}
+} // namespace
+
 int Account::_nbAccounts = 0;
 int Account::_totalAmount = 0;
 int Account::_totalNbDeposits = 0;
@@ -56,6 +73,8 @@ void Account::displayAccountsInfos(void)
 Account::Account(int initial_deposit)
 	: _accountIndex(_nbAccounts), _amount(initial_deposit), _nbDeposits(0), _nbWithdrawals(0)
 {
+	trackAccountAmount(_accountIndex, _amount);
+	++g_liveAccounts;
 	_displayTimestamp();
 	std::cout << "index:" << _accountIndex << ";";
 	std::cout << "amount:" << _amount << ";";
@@ -66,39 +85,19 @@ Account::Account(int initial_deposit)
 
 Account::~Account(void)
 {
-	struct ClosedLogEntry
-	{
-		int index;
-		int amount;
-	};
-
-	static ClosedLogEntry *logs = NULL;
-	static int destroyedCount = 0;
-	static int totalAccounts = 0;
-
-	if (logs == NULL)
-	{
-		totalAccounts = getNbAccounts();
-		logs = new ClosedLogEntry[totalAccounts];
-	}
-	logs[destroyedCount].index = _accountIndex;
-	logs[destroyedCount].amount = _amount;
-	++destroyedCount;
+	--g_liveAccounts;
 	--_nbAccounts;
 	_totalAmount -= _amount;
-	if (destroyedCount != totalAccounts)
+	if (g_liveAccounts != 0)
 		return;
-	while (destroyedCount--)
+	for (int i = 0; i < g_trackedAccounts; ++i)
 	{
 		_displayTimestamp();
-		std::cout << "index:" << logs[destroyedCount].index << ";";
-		std::cout << "amount:" << logs[destroyedCount].amount << ";";
+		std::cout << "index:" << i << ";";
+		std::cout << "amount:" << g_accountAmounts[i] << ";";
 		std::cout << "closed" << std::endl;
 	}
-	delete[] logs;
-	logs = NULL;
-	destroyedCount = 0;
-	totalAccounts = 0;
+	g_trackedAccounts = 0;
 }
 
 void Account::makeDeposit(int deposit)
@@ -108,6 +107,7 @@ void Account::makeDeposit(int deposit)
 	std::cout << "p_amount:" << _amount << ";";
 	std::cout << "deposit:" << deposit << ";";
 	_amount += deposit;
+	trackAccountAmount(_accountIndex, _amount);
 	std::cout << "amount:" << _amount << ";";
 	++_nbDeposits;
 	std::cout << "nb_deposits:" << _nbDeposits << std::endl;
@@ -129,6 +129,7 @@ bool Account::makeWithdrawal(int withdrawal)
 	{
 		std::cout << "withdrawal:" << withdrawal << ";";
 		_amount -= withdrawal;
+		trackAccountAmount(_accountIndex, _amount);
 		std::cout << "amount:" << _amount << ";";
 		++_nbWithdrawals;
 		std::cout << "nb_withdrawals:" << _nbWithdrawals << std::endl;
