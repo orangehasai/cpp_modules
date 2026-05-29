@@ -1,0 +1,4 @@
+LINE one
+
+LINE two
+last LINE
