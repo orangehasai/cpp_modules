@@ -1,4 +1,4 @@
-NAME = harl_2.0
+NAME = harl2.0
 CPP = c++
 CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 SRCS = main.cpp \
