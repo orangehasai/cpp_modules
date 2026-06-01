@@ -1,7 +1,7 @@
-#include "Fixed.hpp"
-
-#include <cmath>
 #include <iostream>
+#include <cmath>
+
+#include "Fixed.hpp"
 
 Fixed::Fixed() : _rawBits(0)
 {
@@ -18,7 +18,7 @@ Fixed::Fixed(const float value) : _rawBits(static_cast<int>(roundf(value * (1 <<
 	std::cout << "Float constructor called" << std::endl;
 }
 
-Fixed::Fixed(const Fixed &other) : _rawBits(0)
+Fixed::Fixed(const Fixed &other)
 {
 	std::cout << "Copy constructor called" << std::endl;
 	*this = other;
@@ -29,7 +29,7 @@ Fixed &Fixed::operator=(const Fixed &other)
 	std::cout << "Copy assignment operator called" << std::endl;
 	if (this != &other)
 	{
-		_rawBits = other.getRawBits();
+		this->_rawBits = other._rawBits;
 	}
 	return *this;
 }
@@ -44,9 +44,9 @@ int Fixed::getRawBits(void) const
 	std::cout << "getRawBits member function called" << std::endl;
 	return _rawBits;
 }
-
 void Fixed::setRawBits(int const raw)
 {
+	std::cout << "setRawBits member function called" << std::endl;
 	_rawBits = raw;
 }
 
