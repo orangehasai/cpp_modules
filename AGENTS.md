@@ -40,6 +40,12 @@ no Containers (vector/list/map, and so forth) and no Algorithms (anything that r
 - Memory leakage occurs in C++ too. When you allocate memory (by using the new keyword), you must avoid memory leaks.
 - From Module 02 to Module 09, your classes must be designed in the Orthodox
 Canonical Form, except when explicitly stated otherwise.
+- The "From now on" rule introduced in Module 02 is a continuing rule for all
+later modules as well. Therefore, when working on Modules 03 to 09, assume the
+Orthodox Canonical Form is still required unless that module or exercise
+explicitly states otherwise. In practice, this means classes should provide the
+default constructor, copy constructor, copy assignment operator, and
+destructor.
 - Any function implementation put in a header file (except for function templates) means 0 to the exercise.
 - You should be able to use each of your headers independently from others. Thus, they must include all the dependencies they need. However, you must avoid the problem of double inclusion by adding include guards. Otherwise, your grade will be 0.
 #### Read me
@@ -47,6 +53,5 @@ Canonical Form, except when explicitly stated otherwise.
 - Sometimes, the guidelines of an exercise look short but the examples can show requirements that are not explicitly written in the instructions.
 - Read each module completely before starting! Really, do it.
 - By Odin, by Thor! Use your brain!!!
-
 
 
