@@ -1,0 +1,3 @@
+- [浮動小数点と固定小数点の表現について](https://qiita.com/izuki_y/items/fb3936192f6ec3f555b2)
+- [小数の変換から学ぶ固定小数点数と浮動小数点数](https://zenn.dev/ippei523/articles/4a038a3281b2eb)
+- [ゼロから学ぶ C++](https://rinatz.github.io/cpp-book/ch07-07-operator-overloading/)
