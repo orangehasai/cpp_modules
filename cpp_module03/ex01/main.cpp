@@ -11,13 +11,13 @@ int main(void)
 	clap.printStatus();
 
 	std::cout << std::endl << "== Derived class ==" << std::endl;
-	ScavTrap Scav("卍YUUTA χ卍");
-	Scav.printStatus();
-	Scav.attack("enemy χ");
-	Scav.guardGate();
-	Scav.takeDamage(30);
-	Scav.beRepaired(10);
-	Scav.printStatus();
+	ScavTrap scav("卍YUUTA χ卍");
+	scav.printStatus();
+	scav.attack("enemy χ");
+	scav.guardGate();
+	scav.takeDamage(30);
+	scav.beRepaired(10);
+	scav.printStatus();
 
 	std::cout << std::endl << "== Orthodox Canonical Form ==" << std::endl;
 	ScavTrap original("卍YUUTA2卍");
