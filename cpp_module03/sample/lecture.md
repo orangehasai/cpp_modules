@@ -82,6 +82,66 @@ ScavTrap
 「派生クラスの中には基底クラス部分が入っている」
 と押さえておけば十分です。
 
+## `class B : public A` の `public` は何か
+
+継承宣言の
+
+```cpp
+class ScavTrap : public ClapTrap
+{
+};
+```
+
+にある `public` は、
+**継承の公開方法** を表します。
+
+一番大事な意味は、
+**`ScavTrap` is-a `ClapTrap` の関係を外からも保つ**
+ことです。
+
+したがって `public` 継承なら、
+`ScavTrap` を `ClapTrap` として扱えます。
+
+```cpp
+ScavTrap s("Serena");
+ClapTrap *base = &s;
+ClapTrap &ref = s;
+```
+
+これはどちらも自然な変換です。
+
+### `public` 継承で何がどう見えるか
+
+`public` 継承では、
+基底クラスの見え方は次のようになります。
+
+- 基底クラスの `public` メンバは、派生クラスから見ても `public`
+- 基底クラスの `protected` メンバは、派生クラスから見ても `protected`
+- 基底クラスの `private` メンバは、派生クラスから直接は触れない
+
+ここで重要なのは、
+これは **メンバの公開範囲の話** であって、
+`protected` メンバを初期化リストに直接書けるという意味ではないことです。
+
+### `private` 継承や `protected` 継承は今回の主役ではない
+
+C++ には
+
+- `public` 継承
+- `protected` 継承
+- `private` 継承
+
+があります。
+
+しかしこの module の `ClapTrap` 系では、
+基本的に **`public` 継承が普通の継承**
+だと考えてよいです。
+
+`ScavTrap` や `FragTrap` は
+「`ClapTrap` の一種」
+として振る舞いたいので、
+ここでは `public` が自然です。
+
 ## ex00: まずは基底クラスそのものを安定させる
 
 `ex00` ではまだ継承しません。
@@ -612,6 +672,138 @@ subject の
 > the ClapTrap instance of DiamondTrap will be created once, and only once
 
 の意味はこれです。
+
+## `virtual public ClapTrap` を分解して読む
+
+```cpp
+class ScavTrap : virtual public ClapTrap
+{
+};
+```
+
+これは 2 つの意味を同時に持っています。
+
+- `public`
+  - `ScavTrap` は `ClapTrap` の一種として扱える
+- `virtual`
+  - 多重継承で同じ `ClapTrap` に複数経路で到達したとき、
+    その `ClapTrap` を別々に持たず、1 個だけ共有する
+
+つまり `public` は
+**外から見た型の関係**
+であり、
+`virtual` は
+**多重継承時の基底クラス共有ルール**
+です。
+
+仮想関数の `virtual` と同じ単語ですが、
+ここでは意味がまったく違います。
+
+## 仮想基底クラスは誰が初期化するのか
+
+通常継承では、
+基底クラスの初期化はその子クラスが行います。
+
+```cpp
+ScavTrap::ScavTrap(const std::string &name) : ClapTrap(name)
+{
+}
+```
+
+これは `ScavTrap` 単体を作るときには普通に有効です。
+
+しかし `ClapTrap` が **仮想基底クラス** になった瞬間、
+ルールが変わります。
+
+`DiamondTrap` のような最終派生クラスを作るときは、
+**仮想基底クラス `ClapTrap` を初期化する責任は最終派生クラスが持つ**
+ようになります。
+
+つまり:
+
+```cpp
+class ScavTrap : virtual public ClapTrap
+{
+};
+
+class FragTrap : virtual public ClapTrap
+{
+};
+
+class DiamondTrap : public ScavTrap, public FragTrap
+{
+};
+```
+
+なら、`ClapTrap` を本当に作る責任を持つのは
+`DiamondTrap` です。
+
+## 途中の `ClapTrap(name)` はどうなるのか
+
+ここが混乱しやすいポイントです。
+
+たとえば `ScavTrap` 側に
+
+```cpp
+ScavTrap::ScavTrap(const std::string &name) : ClapTrap(name)
+{
+	_hitPoints = 100;
+	_energyPoints = 50;
+	_attackDamage = 20;
+}
+```
+
+と書いてあっても、
+`DiamondTrap` を生成している文脈では
+この `: ClapTrap(name)` は **仮想基底の初期化としては使われません**。
+
+言い換えると、
+`DiamondTrap` 生成時には
+
+- `ScavTrap` の初期化リストにある `ClapTrap(name)` は無視される
+- `ScavTrap` のコンストラクタ本体は実行される
+
+です。
+
+したがって:
+
+- `ScavTrap` 単体を作るとき
+  - `ScavTrap` が `ClapTrap` を作る
+- `DiamondTrap` を作るとき
+  - `DiamondTrap` が共有 `ClapTrap` を 1 回だけ作る
+  - `ScavTrap` / `FragTrap` が書いた `ClapTrap(...)` は採用されない
+
+という理解になります。
+
+これは「一度作ってから上書きする」というより、
+**最初から `DiamondTrap` 側の初期化だけが有効**
+だと考える方が正確です。
+
+## `DiamondTrap` のコンストラクタで何が起きるか
+
+概念的には次のような順序です。
+
+```cpp
+DiamondTrap::DiamondTrap(const std::string &name)
+	: ClapTrap(name + "_clap_name"), ScavTrap(name), FragTrap(name)
+{
+}
+```
+
+このときの流れは:
+
+1. `DiamondTrap` が共有 `ClapTrap` を 1 回だけ構築する
+2. `ScavTrap` のコンストラクタに入る
+3. ただし `ScavTrap` 側の `ClapTrap(...)` 指定は使われない
+4. `ScavTrap` の本体処理は実行される
+5. `FragTrap` のコンストラクタに入る
+6. ただし `FragTrap` 側の `ClapTrap(...)` 指定も使われない
+7. `FragTrap` の本体処理は実行される
+8. 最後に `DiamondTrap` 本体が実行される
+
+このため `DiamondTrap` では、
+`ScavTrap` 本体や `FragTrap` 本体でセットされた値を最後にまとめ直す、
+という実装になりやすいです。
 
 ## `DiamondTrap` の初期値はなぜ手で調整するのか
 
