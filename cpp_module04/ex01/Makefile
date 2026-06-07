@@ -1,4 +1,4 @@
-NAME = animal01
+NAME = poly01
 CPP = c++
 CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 SRCS = main.cpp \
