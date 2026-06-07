@@ -21,6 +21,7 @@ WrongCat &WrongCat::operator=(const WrongCat &other)
 	std::cout << "WrongCat: copy assignment constructor called" << std::endl;
 	if (this != &other)
 	{
+		WrongAnimal::operator=(other);
 		this->type = other.type;
 	}
 	return *this;
